@@ -1,0 +1,26 @@
+- name: install nginx
+  yum:
+    name: nginx
+    state: present
+
+- name: enable nginx
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: upload nginx config
+  template:
+    src: templates/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    validate: 'nginx -t -c %s'
+  notify:
+    - restart nginx
+
+- name: upload nginx site configs
+  template:
+    src: templates/nginx.site.conf
+    dest: "/etc/nginx/conf.d/{{item}}.conf"
+  with_items: "{{wanted_domains}}"
+  notify:
+    - restart nginx

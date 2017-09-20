@@ -1,0 +1,47 @@
+- name: create acme lib directories
+  file:
+    state: directory
+    path: "{{item}}"
+  with_items:
+    - /var/lib/acme/accounts/acme-v01.api.letsencrypt.org%2fdirectory/z3cprffccnvjt2mf3dwobfazxfai54ypzk7dgb3mmkiasyynmmfa/
+    - /var/lib/acme/certs
+    - /var/lib/acme/conf
+    - /var/lib/acme/desired
+    - /var/lib/acme/haproxy
+    - /var/lib/acme/keys/3qcur4v5rvkhyuzrmckgd6bafpqrfuc6xokh2mwcw7nz4rfnanwq
+    - /var/lib/acme/live
+    - /var/lib/acme/tmp
+
+- name: create acme conf
+  copy:
+    dest: /var/lib/acme/conf/target
+    content: |
+      request:
+        provider: https://acme-v01.api.letsencrypt.org/directory
+        key:
+          type: rsa
+
+- name: upload acme account key
+  copy:
+    dest: /var/lib/acme/accounts/acme-v01.api.letsencrypt.org%2fdirectory/z3cprffccnvjt2mf3dwobfazxfai54ypzk7dgb3mmkiasyynmmfa/privkey
+    mode: 0600
+    content: "{{acme_account_key}}"
+
+- name: upload acme local key
+  copy:
+    dest: /var/lib/acme/keys/3qcur4v5rvkhyuzrmckgd6bafpqrfuc6xokh2mwcw7nz4rfnanwq/privkey
+    mode: 0600
+    content: "{{acme_local_key}}"
+
+- name: request certs
+  command: "acmetool want {{item}}"
+  with_items: "{{wanted_domains}}"
+
+- name: link certs
+  file:
+    state: link
+    src: "/var/lib/acme/live/{{item}}/haproxy"
+    dest: "/etc/haproxy/certs/{{item}}"
+  with_items: "{{wanted_domains}}"
+  notify:
+    - restart haproxy

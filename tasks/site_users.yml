@@ -1,0 +1,68 @@
+- name: create site users groups
+  group:
+    name: "{{item.name}}"
+    gid: "{{item.gid}}"
+  with_items: "{{site_users}}"
+
+- name: create site users
+  user:
+    name: "{{item.name}}"
+    uid: "{{item.uid}}"
+    group: "{{item.name}}"
+  with_items: "{{site_users}}"
+
+- name: check for site users passwords
+  stat:
+    path: "/home/{{item.name}}/.passwd"
+  register: users_password_file
+  with_items: "{{site_users}}"
+
+- debug:
+    var: users_password_file
+    verbosity: 2
+
+- name: create password files for site users
+  shell: "tr -dc A-Za-z0-9_ < /dev/urandom | head -c 16 | xargs > /home/{{item.0.name}}/.passwd"
+  when: item.1.stat.exists == false
+  with_together:
+    - "{{site_users}}"
+    - "{{users_password_file.results}}"
+
+- name: ensure site users password files permissions
+  file:
+    path: "/home/{{item.name}}/.passwd"
+    owner: "{{item.name}}"
+    group: "{{item.name}}"
+    mode: 0440
+  with_items: "{{site_users}}"
+
+- name: get password
+  shell: "cat /home/{{item.name}}/.passwd"
+  register: site_users_passwords
+  with_items: "{{site_users}}"
+
+- debug:
+    var: site_users_passwords
+    verbosity: 2
+
+- name: set site users passwords
+  shell: "echo '{{item.0.name}}:{{item.1.stdout}}' | chpasswd"
+  with_together:
+    - "{{site_users}}"
+    - "{{site_users_passwords.results}}"
+
+- name: set site users home permissions
+  file:
+    state: directory
+    path: "/home/{{item.name}}"
+    mode: 'g+rx'
+  with_items: "{{site_users}}"
+
+- name: create site users webroots
+  file:
+    state: directory
+    path: "{{item.webroot}}"
+    owner: "{{item.name}}"
+    group: "{{item.name}}"
+    mode: 0750
+  with_items: "{{site_users}}"

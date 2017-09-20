@@ -1,0 +1,23 @@
+- name: install haproxy
+  yum:
+    name: "https://github.com/jsumners/haproxy-rhel7/releases/download/v{{haproxy_version.major}}/haproxy-jbs-{{haproxy_version.major}}-{{haproxy_version.release}}.el7.centos.x86_64.rpm"
+    state: present
+  register: install_haproxy_result
+  failed_when: install_haproxy_result.rc != 0 and
+    'Nothing to do' not in install_haproxy_result.msg
+
+- name: upload haproxy config
+  template:
+    src: templates/haproxy.cfg
+    dest: /etc/haproxy/haproxy.cfg
+    validate: 'haproxy -c -f %s'
+  notify:
+    - restart haproxy
+
+- name: create haproxy certs dir
+  file:
+    state: directory
+    path: /etc/haproxy/certs
+    owner: root
+    group: haproxy
+    mode: 0750

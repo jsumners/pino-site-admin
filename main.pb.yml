@@ -1,0 +1,94 @@
+- hosts: all
+
+  vars_files:
+    - vars/keys.yml
+
+  vars:
+    haproxy_version:
+      major: 1.7.9
+      release: 1
+
+    acme_thumb_print: d13yz0dOEPqUBcY3P52gzhL0ktS9dmJawNz7i-MYT5s
+    wanted_domains:
+      - pino.itcouldbe9.com
+
+    site_users:
+      - name: pino
+        uid: 8000
+        gid: 8000
+        webroot: /opt/webroot/pino.itcouldbe9.com
+
+  handlers:
+    - name: restart haproxy
+      service:
+        name: haproxy
+        state: restarted
+
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted
+
+  tasks:
+    - name: install epel
+      yum:
+        name: epel-release
+        state: present
+
+    - name: intall yum-plugin-copr
+      yum:
+        name: yum-plugin-copr
+        state: present
+
+    - name: subscribe to acmetool repo
+      command: yum -y copr enable hlandau/acmetool
+
+    - name: install extra packages
+      yum:
+        name: "{{item}}"
+        state: present
+      with_items:
+        - git
+        - acmetool
+
+    - name: create webroot directory
+      file:
+        state: directory
+        path: /opt/webroot
+        owner: root
+        group: root
+        mode: 0755
+
+    - include_tasks: tasks/nginx.yml
+      tags:
+        - nginx
+
+    - include_tasks: tasks/haproxy.yml
+      tags:
+        - haproxy
+
+    - include_tasks: tasks/acme.yml
+      tags:
+        - acme
+
+    - include_tasks: tasks/firewall.yml
+      tags:
+        - firewall
+
+    - include_tasks: tasks/site_users.yml
+      tags:
+        - users
+
+    - name: upload sshd config
+      template:
+        src: templates/sshd_config
+        dest: /etc/ssh/sshd_config
+      notify:
+        - restart sshd
+      tags:
+        - ssh

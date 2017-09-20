@@ -1,0 +1,15 @@
+- name: enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: open firewall ports
+  firewalld:
+    immediate: yes
+    permanent: yes
+    state: enabled
+    service: "{{item}}"
+  with_items:
+    - http
+    - https
