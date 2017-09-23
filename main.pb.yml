@@ -110,3 +110,21 @@
         validate: 'visudo -cs -f %s'
       tags:
         - system
+
+    - name: upload cert renewal script
+      template:
+        src: templates/cert_renewal.sh
+        dest: /usr/local/bin/cert_renewal
+        mode: 0755
+      tags:
+        - system
+
+    - name: create cert renewal cronjob
+      cron:
+        dow: '0'
+        minute: '01'
+        hour: '0'
+        name: renew-certs
+        job: /usr/local/bin/cert_renewal
+      tags:
+        - system
