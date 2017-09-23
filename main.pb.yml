@@ -16,7 +16,7 @@
       - name: pino
         uid: 8000
         gid: 8000
-        webroot: /opt/webroot/pino.itcouldbe9.com
+        webroot: pino.itcouldbe9.com
 
   handlers:
     - name: restart haproxy

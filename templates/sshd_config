@@ -30,7 +30,7 @@ Subsystem sftp  /usr/libexec/openssh/sftp-server
 
 {% for user in site_users %}
 Match user {{user.name}}
-  ChrootDirectory /opt/webroot
+  ChrootDirectory /opt/chroot/{{user.name}}
   PasswordAuthentication yes
   ForceCommand internal-sftp
   AllowTcpForwarding no

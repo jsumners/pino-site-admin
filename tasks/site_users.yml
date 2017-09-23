@@ -61,8 +61,41 @@
 - name: create site users webroots
   file:
     state: directory
-    path: "{{item.webroot}}"
+    path: "/opt/webroot/{{item.webroot}}"
     owner: "{{item.name}}"
     group: "{{item.name}}"
+    mode: 0755
+  with_items: "{{site_users}}"
+
+# The next four tasks for chroots and webroot mounts allow us
+# to chroot website users when they sftp to the server while still giving
+# them the access they need to update their sites. Further, it still allows
+# the webserver to read their websites.
+- name: create sftp chroot parent
+  file:
+    state: directory
+    path: /opt/chroot
+
+- name: create chroot directories
+  file:
+    state: directory
+    path: "/opt/chroot/{{item.name}}"
     mode: 0750
+  with_items: "{{site_users}}"
+
+- name: create webroot mount points
+  file:
+    state: directory
+    path: "/opt/chroot/{{item.name}}/{{item.webroot}}"
+    owner: "{{item.name}}"
+    group: "{{item.name}}"
+  with_items: "{{site_users}}"
+
+- name: create webroot mounts
+  mount:
+    src: "/opt/webroot/{{item.webroot}}"
+    name: "/opt/chroot/{{item.name}}/{{item.webroot}}"
+    fstype: none
+    opts: auto,bind
+    state: mounted
   with_items: "{{site_users}}"
