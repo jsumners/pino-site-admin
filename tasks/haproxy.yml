@@ -6,6 +6,12 @@
   failed_when: install_haproxy_result.rc != 0 and
     'Nothing to do' not in install_haproxy_result.msg
 
+- name: enable haproxy
+  service:
+    name: haproxy
+    state: started
+    enabled: yes
+
 - name: upload haproxy config
   template:
     src: templates/haproxy.cfg
