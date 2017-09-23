@@ -39,14 +39,20 @@
       yum:
         name: epel-release
         state: present
+      tags:
+        - system
 
     - name: intall yum-plugin-copr
       yum:
         name: yum-plugin-copr
         state: present
+      tags:
+        - system
 
     - name: subscribe to acmetool repo
       command: yum -y copr enable hlandau/acmetool
+      tags:
+        - system
 
     - name: install extra packages
       yum:
@@ -55,6 +61,8 @@
       with_items:
         - git
         - acmetool
+      tags:
+        - system
 
     - name: create webroot directory
       file:
@@ -92,3 +100,13 @@
         - restart sshd
       tags:
         - ssh
+        - system
+
+    - name: upload admins sudoers
+      template:
+        src: templates/admins.sudoers
+        dest: /etc/sudoers.d/admins
+        mode: 0400
+        validate: 'visudo -cs -f %s'
+      tags:
+        - system
