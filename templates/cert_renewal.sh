@@ -21,7 +21,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-for domain in ${wanted_domains}; do
+for domain in ${wanted_domains[@]}; do
   ln -sf /var/lib/acme/live/${domain}/haproxy /etc/haproxy/certs/${domain}
 done
 
