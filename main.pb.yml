@@ -11,12 +11,13 @@
     acme_thumb_print: d13yz0dOEPqUBcY3P52gzhL0ktS9dmJawNz7i-MYT5s
     wanted_domains:
       - pino.itcouldbe9.com
+      - getpino.io
 
     site_users:
       - name: pino
         uid: 8000
         gid: 8000
-        webroot: pino.itcouldbe9.com
+        webroot: getpino.io
 
   handlers:
     - name: restart haproxy
